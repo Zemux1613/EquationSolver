@@ -7,6 +7,7 @@ public class EquationSolver {
         EquationGenerator equationGenerator = new EquationGenerator();
         equationGenerator.generateEquation(2);
 
+
     }
 
 }
