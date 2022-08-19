@@ -18,9 +18,4 @@ public class RootTree {
     public ArrayList<Operation> getOperationList() {
         return operationList;
     }
-
-    private int calculateResult() {
-
-        return 0;
-    }
 }
