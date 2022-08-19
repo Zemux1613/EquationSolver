@@ -37,40 +37,26 @@ public class EquationGenerator {
             numbers.add(random.nextInt(10) + 1);
         }
 
+        final ArrayList<RootTree> rootTrees = generateTree(new ArrayList<>(), new ArrayList<>(), numberAmount, 2);
         // alle berechenbaren Ergebnisse
-        //    final List<Integer> possibleResults = getPossibleResults(numbers);
+        final List<Integer> possibleResults = getPossibleResults(numbers, rootTrees);
         // wähle ein berechenbares Ergebnis aus
         //    final int result = possibleResults.get(random.nextInt(possibleResults.size()));
 
         final int result = 10;
 
-        final ArrayList<RootTree> rootTrees = generateTree(new ArrayList<>(), new ArrayList<>(), 3, 2);
 
         displayEquation(numbers, result);
     }
 
-    public List<Integer> getPossibleResults(List<Integer> numbers) {
+    // Automat der alle Variationen durchläuft
+    public List<Integer> getPossibleResults(List<Integer> numbers, ArrayList<RootTree> rootTrees) {
         List<Integer> list = new ArrayList<>();
 
-        // Behandele den Fall, dass nur eine Operation benutzt wird
-        for (int i = 0; i < Operation.values().length; i++) {
-            final Operation operation = Operation.values()[i];
-            int result = numbers.get(0);
-            for (int j = 1; j < numbers.size(); j++) {
-                int number = numbers.get(j);
-                if (result < 0) break;
-                switch (operation) {
-                    case ADDITION -> result += number;
-                    case SUBTRACTION -> result -= number;
-                    case MULTIPLIKATION -> result *= number;
-                    case DIVISION -> result /= number;
-                }
-            }
-            System.out.println(numbers + " - " + operation.name() + " - " + result);
-            // negative Ergebnisse sind ausgeschlossen
-            if (result > 0) {
-                list.add(result);
-            }
+        for (int i = 0; i < rootTrees.size(); i++) {
+            final RootTree rootTree = rootTrees.get(i);
+            final ArrayList<Operation> operationList = rootTree.getOperationList();
+
         }
 
         return list;
@@ -83,7 +69,7 @@ public class EquationGenerator {
 
         if (currentLayer == 2) {
             for (Operation value : Operation.values()) {
-                final RootTree rootTree = new RootTree(getOperations(new ArrayList<>(), Operation.ADDITION));
+                final RootTree rootTree = new RootTree(getOperations(new ArrayList<>(), value));
                 trees.add(rootTree);
                 lastTrees.add(rootTree);
             }
