@@ -100,19 +100,6 @@ public class EquationGenerator {
         return addition;
     }
 
-    public boolean hasPair(List<Integer> numbers) {
-        // 1 + 4 * 1 * 5 = 21
-        // 1 * 4 * 1 * 5 = 20
-        for (int i = 0; i < numbers.size() - 1; i++) {
-            final int left = numbers.get(i);
-            final int right = numbers.get(i + 1);
-            if (left != 1 && right != 1) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public void displayEquation(List<Integer> list, int result) {
         StringJoiner stringJoiner = new StringJoiner(" o ");
         list.forEach(integer -> stringJoiner.add(integer + ""));
