@@ -70,34 +70,55 @@ public class EquationGenerator {
                     }
                 }
             });
-
         }
-
         return list;
     }
 
     // Automat der eine spezielle Lösung berechnet
     public void calculateResult(String equation, ArrayList<Operation> operators, BiConsumer<Integer, String> consumer) {
+        final String equationWithOperations = getEquationWithOperations(equation, operators);
+        equation = handlePointBeforeDashCalculation(equationWithOperations);
         int before = Integer.parseInt(equation.charAt(0) + "");
-        int operationCount = 0;
-        StringBuilder currentEquation = new StringBuilder();
-        for (int i = 0; i < equation.length() - 1; i++) {
-            if (equation.charAt(i) == 'o') {
-                final Operation operation = operators.get(operationCount);
-                currentEquation.append(operation.getSymbol());
-                switch (operation) {
-                    case ADDITION -> before += Integer.parseInt(equation.charAt(i + 1) + "");
-                    case SUBTRACTION -> before -= Integer.parseInt(equation.charAt(i + 1) + "");
-                    case MULTIPLIKATION -> before *= Integer.parseInt(equation.charAt(i + 1) + "");
-                    case DIVISION -> before /= Integer.parseInt(equation.charAt(i + 1) + "");
-                }
-                operationCount++;
-            } else {
-                currentEquation.append(equation.charAt(i));
+        for (int i = 1; i < equation.length() - 1; i++) {
+            final String symbol = String.valueOf(equation.charAt(i));
+            if (symbol.equals(Operation.ADDITION.getSymbol())) {
+                before += Integer.parseInt(equation.charAt(i + 1) + "");
+            } else if (symbol.equals(Operation.SUBTRACTION.getSymbol())) {
+                before -= Integer.parseInt(equation.charAt(i + 1) + "");
+            } else if (symbol.equals(Operation.MULTIPLIKATION.getSymbol())) {
+                before *= Integer.parseInt(equation.charAt(i + 1) + "");
+            } else if (symbol.equals(Operation.DIVISION.getSymbol())) {
+                before /= Integer.parseInt(equation.charAt(i + 1) + "");
             }
         }
-        currentEquation.append(equation.charAt(equation.length() - 1));
-        consumer.accept(before, currentEquation.toString());
+        consumer.accept(before, equationWithOperations);
+    }
+
+    public String getEquationWithOperations(final String rawEquation, ArrayList<Operation> operators) {
+        int operationCount = 0;
+        StringBuilder currentEquation = new StringBuilder();
+        for (int i = 0; i < rawEquation.length() - 1; i++) {
+            if (rawEquation.charAt(i) == 'o') {
+                final Operation operation = operators.get(operationCount);
+                currentEquation.append(operation.getSymbol());
+                operationCount++;
+            } else {
+                currentEquation.append(rawEquation.charAt(i));
+            }
+        }
+        currentEquation.append(rawEquation.charAt(rawEquation.length() - 1));
+        return currentEquation.toString();
+    }
+
+    private String handlePointBeforeDashCalculation(String equation) {
+        String ret = equation;
+
+        boolean killSwitch = true;
+        for (int i = 0; i < equation.length() && killSwitch; i++) {
+            final char charAt = equation.charAt(i);
+        }
+
+        return ret;
     }
 
     public ArrayList<RootTree> generateTree(ArrayList<RootTree> trees, ArrayList<RootTree> lastTrees, int deap, int currentLayer) {
