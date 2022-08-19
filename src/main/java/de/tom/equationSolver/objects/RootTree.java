@@ -12,7 +12,6 @@ public class RootTree {
     }
 
     public RootTree(ArrayList<Operation> rootBefore) {
-        System.out.println("New RootTree of " + rootBefore.toString());
         operationList = rootBefore;
     }
 
