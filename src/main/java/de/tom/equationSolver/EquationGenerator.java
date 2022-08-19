@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.StringJoiner;
+import java.util.function.BiConsumer;
 
 public class EquationGenerator {
 
@@ -18,9 +19,9 @@ public class EquationGenerator {
         List<Integer> numbers = new ArrayList<>();
         final Random random = new Random();
 
-        // Nummern zwischen 1 - 10 generieren
+        // Nummern zwischen 1 - 9 generieren
         while (numbers.size() < numberAmount) {
-            final int randomNumber = random.nextInt(10) + 1;
+            final int randomNumber = random.nextInt(9) + 1;
             numbers.add(randomNumber);
         }
 
@@ -34,18 +35,15 @@ public class EquationGenerator {
         if (numberAmount == getAmountOfItem(numbers, numbers.get(0))) {
             System.out.println("The equation isn't really interesting. So some numbers changed!");
             numbers.remove(0);
-            numbers.add(random.nextInt(10) + 1);
+            numbers.add(random.nextInt(9) + 1);
         }
 
         final ArrayList<RootTree> rootTrees = generateTree(new ArrayList<>(), new ArrayList<>(), numberAmount, 2);
         // alle berechenbaren Ergebnisse
         final List<Integer> possibleResults = getPossibleResults(numbers, rootTrees);
         // wähle ein berechenbares Ergebnis aus
-        //    final int result = possibleResults.get(random.nextInt(possibleResults.size()));
-
-        final int result = 10;
-
-
+        final int result = possibleResults.get(random.nextInt(possibleResults.size()));
+        // final int result = 10;
         displayEquation(numbers, result);
     }
 
@@ -53,13 +51,50 @@ public class EquationGenerator {
     public List<Integer> getPossibleResults(List<Integer> numbers, ArrayList<RootTree> rootTrees) {
         List<Integer> list = new ArrayList<>();
 
-        for (int i = 0; i < rootTrees.size(); i++) {
-            final RootTree rootTree = rootTrees.get(i);
+        String leftSideOfEquation = getLeftSideOfEquation(numbers, true).toString();
+        System.out.println(leftSideOfEquation);
+
+        final List<RootTree> relevantTrees = rootTrees.stream().filter(rootTree -> rootTree.getOperationList().size() == numbers.size() - 1).toList();
+        for (int i = 0; i < relevantTrees.size(); i++) {
+            final RootTree rootTree = relevantTrees.get(i);
             final ArrayList<Operation> operationList = rootTree.getOperationList();
+
+            // Gleichung mit Operator Liste durchrechnen und das Ergebnis auf list hinzufügen sollte es dort noch nicht drauf sein.
+            calculateResult(leftSideOfEquation, operationList, (integer, s) -> {
+                System.out.println(s + " = " + integer);
+                if (integer > 0) {
+                    if (!list.contains(integer)) {
+                        list.add(integer);
+                    }
+                }
+            });
 
         }
 
         return list;
+    }
+
+    public void calculateResult(String equation, ArrayList<Operation> operators, BiConsumer<Integer, String> consumer) {
+        int before = Integer.parseInt(equation.charAt(0) + "");
+        int operationCount = 0;
+        StringBuilder currentEquation = new StringBuilder();
+        for (int i = 0; i < equation.length() - 1; i++) {
+            if (equation.charAt(i) == 'o') {
+                final Operation operation = operators.get(operationCount);
+                currentEquation.append(operation.getSymbol());
+                switch (operation) {
+                    case ADDITION -> before += Integer.parseInt(equation.charAt(i + 1) + "");
+                    case SUBTRACTION -> before -= Integer.parseInt(equation.charAt(i + 1) + "");
+                    case MULTIPLIKATION -> before *= Integer.parseInt(equation.charAt(i + 1) + "");
+                    case DIVISION -> before /= Integer.parseInt(equation.charAt(i + 1) + "");
+                }
+                operationCount++;
+            } else {
+                currentEquation.append(equation.charAt(i));
+            }
+        }
+        currentEquation.append(equation.charAt(equation.length() - 1));
+        consumer.accept(before, currentEquation.toString());
     }
 
     public ArrayList<RootTree> generateTree(ArrayList<RootTree> trees, ArrayList<RootTree> lastTrees, int deap, int currentLayer) {
@@ -101,9 +136,14 @@ public class EquationGenerator {
     }
 
     public void displayEquation(List<Integer> list, int result) {
-        StringJoiner stringJoiner = new StringJoiner(" o ");
-        list.forEach(integer -> stringJoiner.add(integer + ""));
+        StringJoiner stringJoiner = getLeftSideOfEquation(list, false);
         System.out.println(stringJoiner + " = " + result);
+    }
+
+    private static StringJoiner getLeftSideOfEquation(List<Integer> list, boolean automat) {
+        StringJoiner stringJoiner = new StringJoiner(automat ? "o" : " o ");
+        list.forEach(integer -> stringJoiner.add(integer + ""));
+        return stringJoiner;
     }
 
     public long getAmountOfItem(List<Integer> list, int item) {
