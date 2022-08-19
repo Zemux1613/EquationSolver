@@ -1,5 +1,7 @@
 package de.tom.equationSolver;
 
+import de.tom.equationSolver.objects.RootTree;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -36,9 +38,13 @@ public class EquationGenerator {
         }
 
         // alle berechenbaren Ergebnisse
-        final List<Integer> possibleResults = getPossibleResults(numbers);
+        //    final List<Integer> possibleResults = getPossibleResults(numbers);
         // wähle ein berechenbares Ergebnis aus
-        final int result = possibleResults.get(random.nextInt(possibleResults.size()));
+        //    final int result = possibleResults.get(random.nextInt(possibleResults.size()));
+
+        final int result = 10;
+
+        final ArrayList<RootTree> rootTrees = generateTree(new ArrayList<>(), new ArrayList<>(), 3, 2);
 
         displayEquation(numbers, result);
     }
@@ -68,6 +74,44 @@ public class EquationGenerator {
         }
 
         return list;
+    }
+
+    public ArrayList<RootTree> generateTree(ArrayList<RootTree> trees, ArrayList<RootTree> lastTrees, int deap, int currentLayer) {
+        if (deap == 0 || deap == 1) {
+            return trees;
+        }
+
+        if (currentLayer == 2) {
+            for (Operation value : Operation.values()) {
+                final RootTree rootTree = new RootTree(getOperations(new ArrayList<>(), Operation.ADDITION));
+                trees.add(rootTree);
+                lastTrees.add(rootTree);
+            }
+        } else {
+            final int size = lastTrees.size();
+            lastTrees.clear();
+            for (int i = 0; i < size; i++) {
+                final ArrayList<Operation> operationList = trees.get(i).getOperationList();
+                for (Operation value : Operation.values()) {
+                    final RootTree rootTree = new RootTree(getOperations(operationList, value));
+                    lastTrees.add(rootTree);
+                    trees.add(rootTree);
+                }
+            }
+        }
+
+        if (deap >= currentLayer) {
+            generateTree(trees, lastTrees, deap, ++currentLayer);
+            return trees;
+        }
+
+        return trees;
+    }
+
+    private static ArrayList<Operation> getOperations(ArrayList<Operation> operationList, Operation operation) {
+        final ArrayList<Operation> addition = (ArrayList<Operation>) operationList.clone();
+        addition.add(operation);
+        return addition;
     }
 
     public boolean hasPair(List<Integer> numbers) {
