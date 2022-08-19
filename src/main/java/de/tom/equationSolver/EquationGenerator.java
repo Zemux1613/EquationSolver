@@ -1,5 +1,7 @@
 package de.tom.equationSolver;
 
+import de.tom.equationSolver.logger.LogLevel;
+import de.tom.equationSolver.logger.Logger;
 import de.tom.equationSolver.objects.RootTree;
 
 import java.util.ArrayList;
@@ -7,8 +9,16 @@ import java.util.List;
 import java.util.Random;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class EquationGenerator {
+
+    private Pattern pattern;
+
+    public EquationGenerator() {
+        pattern = Pattern.compile("([0-9](\\*|\\/)+[0-9])");
+    }
 
     public void generateEquation(int numberAmount) {
 
@@ -78,20 +88,35 @@ public class EquationGenerator {
     public void calculateResult(String equation, ArrayList<Operation> operators, BiConsumer<Integer, String> consumer) {
         final String equationWithOperations = getEquationWithOperations(equation, operators);
         equation = handlePointBeforeDashCalculation(equationWithOperations);
+        int result = getResult(equation);
+        consumer.accept(result, equationWithOperations);
+    }
+
+    private static int getResult(String equation) {
         int before = Integer.parseInt(equation.charAt(0) + "");
+        Logger.log(LogLevel.INFO, equation, equation);
+        Logger.log(LogLevel.INFO, "Begin with " + before, equation);
         for (int i = 1; i < equation.length() - 1; i++) {
             final String symbol = String.valueOf(equation.charAt(i));
             if (symbol.equals(Operation.ADDITION.getSymbol())) {
-                before += Integer.parseInt(equation.charAt(i + 1) + "");
+                final int nextNumber = Integer.parseInt(equation.charAt(i + 1) + "");
+                before += nextNumber;
+                Logger.log(LogLevel.INFO, before + " + " + nextNumber, equation);
             } else if (symbol.equals(Operation.SUBTRACTION.getSymbol())) {
-                before -= Integer.parseInt(equation.charAt(i + 1) + "");
+                final int nextNumber = Integer.parseInt(equation.charAt(i + 1) + "");
+                before -= nextNumber;
+                Logger.log(LogLevel.INFO, before + " - " + nextNumber, equation);
             } else if (symbol.equals(Operation.MULTIPLIKATION.getSymbol())) {
-                before *= Integer.parseInt(equation.charAt(i + 1) + "");
+                final int nextNumber = Integer.parseInt(equation.charAt(i + 1) + "");
+                before *= nextNumber;
+                Logger.log(LogLevel.INFO, before + " * " + nextNumber, equation);
             } else if (symbol.equals(Operation.DIVISION.getSymbol())) {
-                before /= Integer.parseInt(equation.charAt(i + 1) + "");
+                final int nextNumber = Integer.parseInt(equation.charAt(i + 1) + "");
+                before /= nextNumber;
+                Logger.log(LogLevel.INFO, before + " / " + nextNumber, equation);
             }
         }
-        consumer.accept(before, equationWithOperations);
+        return before;
     }
 
     public String getEquationWithOperations(final String rawEquation, ArrayList<Operation> operators) {
@@ -113,9 +138,14 @@ public class EquationGenerator {
     private String handlePointBeforeDashCalculation(String equation) {
         String ret = equation;
 
-        boolean killSwitch = true;
-        for (int i = 0; i < equation.length() && killSwitch; i++) {
-            final char charAt = equation.charAt(i);
+        final Matcher matcher = pattern.matcher(ret);
+        if (matcher.find()) {
+            for (int i = 0; i < matcher.groupCount(); i++) {
+                String rawEquation = matcher.group(i);
+                final int result = getResult(rawEquation);
+                ret = ret.replace(rawEquation, result + "");
+                Logger.log(LogLevel.INFO, "replaced " + rawEquation + " to " + result, equation);
+            }
         }
 
         return ret;

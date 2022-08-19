@@ -12,4 +12,7 @@ public enum LogLevel {
         this.prefix = prefix;
     }
 
+    public String getPrefix() {
+        return prefix;
+    }
 }
