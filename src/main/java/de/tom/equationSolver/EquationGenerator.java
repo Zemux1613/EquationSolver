@@ -46,6 +46,27 @@ public class EquationGenerator {
     public List<Integer> getPossibleResults(List<Integer> numbers) {
         List<Integer> list = new ArrayList<>();
 
+        // Behandele den Fall, dass nur eine Operation benutzt wird
+        for (int i = 0; i < Operation.values().length; i++) {
+            final Operation operation = Operation.values()[i];
+            int result = numbers.get(0);
+            for (int j = 1; j < numbers.size(); j++) {
+                int number = numbers.get(j);
+                if (result < 0) break;
+                switch (operation) {
+                    case ADDITION -> result += number;
+                    case SUBTRACTION -> result -= number;
+                    case MULTIPLIKATION -> result *= number;
+                    case DIVISION -> result /= number;
+                }
+            }
+            System.out.println(numbers + " - " + operation.name() + " - " + result);
+            // negative Ergebnisse sind ausgeschlossen
+            if (result > 0) {
+                list.add(result);
+            }
+        }
+
         return list;
     }
 
