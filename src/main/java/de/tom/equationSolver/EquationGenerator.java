@@ -62,7 +62,9 @@ public class EquationGenerator {
             // Gleichung mit Operator Liste durchrechnen und das Ergebnis auf list hinzufügen sollte es dort noch nicht drauf sein.
             calculateResult(leftSideOfEquation, operationList, (integer, s) -> {
                 System.out.println(s + " = " + integer);
+                // negative Zahlen sind nicht erlaubt
                 if (integer > 0) {
+                    // doppelte Zahlen werden nicht stärker Gewichtet
                     if (!list.contains(integer)) {
                         list.add(integer);
                     }
