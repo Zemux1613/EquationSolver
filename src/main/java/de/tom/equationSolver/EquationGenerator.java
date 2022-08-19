@@ -61,11 +61,11 @@ public class EquationGenerator {
 
             // Gleichung mit Operator Liste durchrechnen und das Ergebnis auf list hinzufügen sollte es dort noch nicht drauf sein.
             calculateResult(leftSideOfEquation, operationList, (integer, s) -> {
-                System.out.println(s + " = " + integer);
                 // negative Zahlen sind nicht erlaubt
                 if (integer > 0) {
                     // doppelte Zahlen werden nicht stärker Gewichtet
                     if (!list.contains(integer)) {
+                        System.out.println(s + " = " + integer);
                         list.add(integer);
                     }
                 }
@@ -76,6 +76,7 @@ public class EquationGenerator {
         return list;
     }
 
+    // Automat der eine spezielle Lösung berechnet
     public void calculateResult(String equation, ArrayList<Operation> operators, BiConsumer<Integer, String> consumer) {
         int before = Integer.parseInt(equation.charAt(0) + "");
         int operationCount = 0;
