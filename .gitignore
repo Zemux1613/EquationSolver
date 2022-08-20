@@ -7,7 +7,7 @@
 /dataSources/
 /dataSources.local.xml
 /target/
-./idea/*
+./idea/*xml
 /logs/*
 *.xml
 *.mf
