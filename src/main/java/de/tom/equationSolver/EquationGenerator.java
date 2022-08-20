@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class EquationGenerator {
@@ -52,17 +53,19 @@ public class EquationGenerator {
 
         final ArrayList<RootTree> rootTrees = generateTree(new ArrayList<>(), new ArrayList<>(), numberAmount, 2);
         // alle berechenbaren Ergebnisse
-        final List<Integer> possibleResults = getPossibleResults(numbers, rootTrees);
-        System.out.println(possibleResults.size());
-        // wähle ein berechenbares Ergebnis aus
-        final int result = possibleResults.get(random.nextInt(possibleResults.size()));
-        // final int result = 10;
-        displayEquation(numbers, result);
+        getPossibleResults(numbers, rootTrees, possibleResults -> {
+            System.out.println(possibleResults.size());
+            // wähle ein berechenbares Ergebnis aus
+            final int result = possibleResults.get(random.nextInt(possibleResults.size()));
+            // final int result = 10;
+            displayEquation(numbers, result);
+        });
     }
 
     // Automat der alle Variationen durchläuft
-    public List<Integer> getPossibleResults(List<Integer> numbers, ArrayList<RootTree> rootTrees) {
+    public void getPossibleResults(List<Integer> numbers, ArrayList<RootTree> rootTrees, Consumer<List<Integer>> consumer) {
         List<Integer> list = new ArrayList<>();
+        List<Integer> blackList = new ArrayList<>();
 
         String leftSideOfEquation = getLeftSideOfEquation(numbers, true).toString();
         System.out.println(leftSideOfEquation);
@@ -77,17 +80,28 @@ public class EquationGenerator {
                 if (aDouble > 0) {
                     // nur ganze Zahlen
                     if (aDouble % 1 == 0) {
-                        // doppelte Zahlen werden nicht stärker Gewichtet
                         final int parseInt = Integer.parseInt(String.valueOf(aDouble).substring(0, String.valueOf(aDouble).indexOf(".")));
-                        if (!list.contains(parseInt)) {
-                            System.out.println(equation + " = " + parseInt);
-                            list.add(parseInt);
+                        // Ignoriere nicht eindeutige Lösungen.
+                        if (!blackList.contains(parseInt)) {
+                            // doppelte Zahlen werden nicht stärker Gewichtet
+                            if (!list.contains(parseInt)) {
+                                System.out.println(equation + " = " + parseInt);
+                                list.add(parseInt);
+                            } else {
+                                // Entferne nicht eindeutige Lösungen. (Lösungen mit dem selbem Ergebnis aber verschiedenen Operatoren)
+                                System.out.println(equation + " = " + parseInt);
+                                final boolean remove = list.remove((Integer) parseInt);
+                                if(remove){
+                                    blackList.add(parseInt);
+                                }
+                            }
                         }
                     }
                 }
             });
         }
-        return list;
+        System.out.println(blackList.toString());
+        consumer.accept(list);
     }
 
     // Automat der eine spezielle Lösung berechnet
