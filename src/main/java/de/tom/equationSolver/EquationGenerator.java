@@ -1,23 +1,25 @@
 package de.tom.equationSolver;
 
-import de.tom.equationSolver.logger.LogLevel;
-import de.tom.equationSolver.logger.Logger;
 import de.tom.equationSolver.objects.RootTree;
+import org.mariuszgromada.math.mxparser.Expression;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class EquationGenerator {
 
-    private Pattern pattern;
+    private final Pattern pointBeforeDash;
+    private final Pattern numbers;
+    private final Pattern operators;
 
     public EquationGenerator() {
-        pattern = Pattern.compile("([0-9](\\*|\\/)+[0-9])");
+        pointBeforeDash = Pattern.compile("([0-9](\\*|\\/)+[0-9])");
+        numbers = Pattern.compile("([0-9])+");
+        operators = Pattern.compile("(\\+|-|\\*|\\/)");
     }
 
     public void generateEquation(int numberAmount) {
@@ -51,6 +53,7 @@ public class EquationGenerator {
         final ArrayList<RootTree> rootTrees = generateTree(new ArrayList<>(), new ArrayList<>(), numberAmount, 2);
         // alle berechenbaren Ergebnisse
         final List<Integer> possibleResults = getPossibleResults(numbers, rootTrees);
+        System.out.println(possibleResults.size());
         // wähle ein berechenbares Ergebnis aus
         final int result = possibleResults.get(random.nextInt(possibleResults.size()));
         // final int result = 10;
@@ -65,18 +68,21 @@ public class EquationGenerator {
         System.out.println(leftSideOfEquation);
 
         final List<RootTree> relevantTrees = rootTrees.stream().filter(rootTree -> rootTree.getOperationList().size() == numbers.size() - 1).toList();
-        for (int i = 0; i < relevantTrees.size(); i++) {
-            final RootTree rootTree = relevantTrees.get(i);
+        for (final RootTree rootTree : relevantTrees) {
             final ArrayList<Operation> operationList = rootTree.getOperationList();
 
             // Gleichung mit Operator Liste durchrechnen und das Ergebnis auf list hinzufügen sollte es dort noch nicht drauf sein.
-            calculateResult(leftSideOfEquation, operationList, (integer, s) -> {
+            calculateResult(leftSideOfEquation, operationList, (aDouble, equation) -> {
                 // negative Zahlen sind nicht erlaubt
-                if (integer > 0) {
-                    // doppelte Zahlen werden nicht stärker Gewichtet
-                    if (!list.contains(integer)) {
-                        System.out.println(s + " = " + integer);
-                        list.add(integer);
+                if (aDouble > 0) {
+                    // nur ganze Zahlen
+                    if (aDouble % 1 == 0) {
+                        // doppelte Zahlen werden nicht stärker Gewichtet
+                        final int parseInt = Integer.parseInt(String.valueOf(aDouble).substring(0, String.valueOf(aDouble).indexOf(".")));
+                        if (!list.contains(parseInt)) {
+                            System.out.println(equation + " = " + parseInt);
+                            list.add(parseInt);
+                        }
                     }
                 }
             });
@@ -85,38 +91,11 @@ public class EquationGenerator {
     }
 
     // Automat der eine spezielle Lösung berechnet
-    public void calculateResult(String equation, ArrayList<Operation> operators, BiConsumer<Integer, String> consumer) {
+    public void calculateResult(String equation, ArrayList<Operation> operators, BiConsumer<Double, String> consumer) {
         final String equationWithOperations = getEquationWithOperations(equation, operators);
-        equation = handlePointBeforeDashCalculation(equationWithOperations);
-        int result = getResult(equation);
+        final Expression expression = new Expression(equationWithOperations);
+        final double result = expression.calculate(); //getResult(equation);
         consumer.accept(result, equationWithOperations);
-    }
-
-    private static int getResult(String equation) {
-        int before = Integer.parseInt(equation.charAt(0) + "");
-        Logger.log(LogLevel.INFO, equation, equation);
-        Logger.log(LogLevel.INFO, "Begin with " + before, equation);
-        for (int i = 1; i < equation.length() - 1; i++) {
-            final String symbol = String.valueOf(equation.charAt(i));
-            if (symbol.equals(Operation.ADDITION.getSymbol())) {
-                final int nextNumber = Integer.parseInt(equation.charAt(i + 1) + "");
-                before += nextNumber;
-                Logger.log(LogLevel.INFO, before + " + " + nextNumber, equation);
-            } else if (symbol.equals(Operation.SUBTRACTION.getSymbol())) {
-                final int nextNumber = Integer.parseInt(equation.charAt(i + 1) + "");
-                before -= nextNumber;
-                Logger.log(LogLevel.INFO, before + " - " + nextNumber, equation);
-            } else if (symbol.equals(Operation.MULTIPLIKATION.getSymbol())) {
-                final int nextNumber = Integer.parseInt(equation.charAt(i + 1) + "");
-                before *= nextNumber;
-                Logger.log(LogLevel.INFO, before + " * " + nextNumber, equation);
-            } else if (symbol.equals(Operation.DIVISION.getSymbol())) {
-                final int nextNumber = Integer.parseInt(equation.charAt(i + 1) + "");
-                before /= nextNumber;
-                Logger.log(LogLevel.INFO, before + " / " + nextNumber, equation);
-            }
-        }
-        return before;
     }
 
     public String getEquationWithOperations(final String rawEquation, ArrayList<Operation> operators) {
@@ -133,22 +112,6 @@ public class EquationGenerator {
         }
         currentEquation.append(rawEquation.charAt(rawEquation.length() - 1));
         return currentEquation.toString();
-    }
-
-    private String handlePointBeforeDashCalculation(String equation) {
-        String ret = equation;
-
-        final Matcher matcher = pattern.matcher(ret);
-        if (matcher.find()) {
-            for (int i = 0; i < matcher.groupCount(); i++) {
-                String rawEquation = matcher.group(i);
-                final int result = getResult(rawEquation);
-                ret = ret.replace(rawEquation, result + "");
-                Logger.log(LogLevel.INFO, "replaced " + rawEquation + " to " + result, equation);
-            }
-        }
-
-        return ret;
     }
 
     public ArrayList<RootTree> generateTree(ArrayList<RootTree> trees, ArrayList<RootTree> lastTrees, int deap, int currentLayer) {
