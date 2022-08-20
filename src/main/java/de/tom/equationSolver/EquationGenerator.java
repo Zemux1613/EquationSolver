@@ -3,10 +3,7 @@ package de.tom.equationSolver;
 import de.tom.equationSolver.objects.RootTree;
 import org.mariuszgromada.math.mxparser.Expression;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -50,11 +47,10 @@ public class EquationGenerator {
             numbers.remove(0);
             numbers.add(random.nextInt(9) + 1);
         }
-
         final ArrayList<RootTree> rootTrees = generateTree(new ArrayList<>(), new ArrayList<>(), numberAmount, 2);
+
         // alle berechenbaren Ergebnisse
         getPossibleResults(numbers, rootTrees, possibleResults -> {
-            System.out.println(possibleResults.size());
             // wähle ein berechenbares Ergebnis aus
             final int result = possibleResults.get(random.nextInt(possibleResults.size()));
             // final int result = 10;
@@ -66,6 +62,7 @@ public class EquationGenerator {
     public void getPossibleResults(List<Integer> numbers, ArrayList<RootTree> rootTrees, Consumer<List<Integer>> consumer) {
         List<Integer> list = new ArrayList<>();
         List<Integer> blackList = new ArrayList<>();
+        List<String> knownEquations = new ArrayList<>();
 
         String leftSideOfEquation = getLeftSideOfEquation(numbers, true).toString();
         System.out.println(leftSideOfEquation);
@@ -76,6 +73,10 @@ public class EquationGenerator {
 
             // Gleichung mit Operator Liste durchrechnen und das Ergebnis auf list hinzufügen sollte es dort noch nicht drauf sein.
             calculateResult(leftSideOfEquation, operationList, (aDouble, equation) -> {
+                // ignore known equations
+                if (knownEquations.contains(equation)) {
+                    return;
+                }
                 // negative Zahlen sind nicht erlaubt
                 if (aDouble > 0) {
                     // nur ganze Zahlen
@@ -87,20 +88,17 @@ public class EquationGenerator {
                             if (!list.contains(parseInt)) {
                                 System.out.println(equation + " = " + parseInt);
                                 list.add(parseInt);
+                                knownEquations.add(equation);
                             } else {
                                 // Entferne nicht eindeutige Lösungen. (Lösungen mit dem selbem Ergebnis aber verschiedenen Operatoren)
-                                System.out.println(equation + " = " + parseInt);
-                                final boolean remove = list.remove((Integer) parseInt);
-                                if(remove){
-                                    blackList.add(parseInt);
-                                }
+                                list.remove((Integer) parseInt);
+                                blackList.add(parseInt);
                             }
                         }
                     }
                 }
             });
         }
-        System.out.println(blackList.toString());
         consumer.accept(list);
     }
 
@@ -128,6 +126,7 @@ public class EquationGenerator {
         return currentEquation.toString();
     }
 
+    // TODO: Methode nochmal überdenken irgendwie scheinen zuviele RootTrees generiert zu werden.
     public ArrayList<RootTree> generateTree(ArrayList<RootTree> trees, ArrayList<RootTree> lastTrees, int deap, int currentLayer) {
         if (deap == 0 || deap == 1) {
             return trees;
