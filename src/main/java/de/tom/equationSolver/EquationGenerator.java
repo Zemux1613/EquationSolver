@@ -1,24 +1,15 @@
 package de.tom.equationSolver;
 
+import de.tom.equationSolver.logger.LogLevel;
+import de.tom.equationSolver.logger.Logger;
 import de.tom.equationSolver.objects.RootTree;
 import org.mariuszgromada.math.mxparser.Expression;
 
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
 
 public class EquationGenerator {
-
-    private final Pattern pointBeforeDash;
-    private final Pattern numbers;
-    private final Pattern operators;
-
-    public EquationGenerator() {
-        pointBeforeDash = Pattern.compile("([0-9](\\*|\\/)+[0-9])");
-        numbers = Pattern.compile("([0-9])+");
-        operators = Pattern.compile("(\\+|-|\\*|\\/)");
-    }
 
     public void generateEquation(int numberAmount) {
 
@@ -65,13 +56,12 @@ public class EquationGenerator {
         List<String> knownEquations = new ArrayList<>();
 
         String leftSideOfEquation = getLeftSideOfEquation(numbers, true).toString();
-        System.out.println(leftSideOfEquation);
 
         final List<RootTree> relevantTrees = rootTrees.stream().filter(rootTree -> rootTree.getOperationList().size() == numbers.size() - 1).toList();
         for (final RootTree rootTree : relevantTrees) {
             final ArrayList<Operation> operationList = rootTree.getOperationList();
 
-            // Gleichung mit Operator Liste durchrechnen und das Ergebnis auf list hinzufügen sollte es dort noch nicht drauf sein.
+            // Gleichung mit Operator Liste durchrechnen und das Ergebnis auf list hinzufügen sollte es dort noch nicht darauf sein.
             calculateResult(leftSideOfEquation, operationList, (aDouble, equation) -> {
                 // ignore known equations
                 if (knownEquations.contains(equation)) {
@@ -86,7 +76,7 @@ public class EquationGenerator {
                         if (!blackList.contains(parseInt)) {
                             // doppelte Zahlen werden nicht stärker Gewichtet
                             if (!list.contains(parseInt)) {
-                                System.out.println(equation + " = " + parseInt);
+                                Logger.log(LogLevel.INFO, equation + " = " + parseInt, equation);
                                 list.add(parseInt);
                                 knownEquations.add(equation);
                             } else {
@@ -126,7 +116,7 @@ public class EquationGenerator {
         return currentEquation.toString();
     }
 
-    // TODO: Methode nochmal überdenken irgendwie scheinen zuviele RootTrees generiert zu werden.
+    // TODO: Methode nochmal überdenken irgendwie scheinen zu viele RootTrees generiert zu werden.
     public ArrayList<RootTree> generateTree(ArrayList<RootTree> trees, ArrayList<RootTree> lastTrees, int deap, int currentLayer) {
         if (deap == 0 || deap == 1) {
             return trees;
